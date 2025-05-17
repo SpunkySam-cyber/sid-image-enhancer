@@ -1,0 +1,127 @@
+# Learning to See in the Dark:
+
+**U-Net Based Low-Light Image Enhancement Using Neural Networks**
+
+---
+
+## 1. Introduction
+
+### 1.1 Background
+
+Capturing high-quality images in low-light environments is challenging due to insufficient light and short exposure times, resulting in dark, noisy images with poor detail. Traditional methods like histogram equalization, gamma correction, or denoising filters operate on processed RGB images and often fail in extreme low-light conditions, sometimes introducing artifacts or unrealistic effects. Learning-based methods that work directly on raw sensor data can better understand noise and illumination. The SID (See-in-the-Dark) framework proposes training neural networks to map short-exposure raw images to clean, long-exposure images, bypassing traditional image signal processing (ISP) pipelines.
+
+### 1.2 Current Issues
+
+* Traditional methods are handcrafted, static, and ineffective in very dark scenes or variable lighting.
+* Most enhancement methods work on RGB images, losing rich raw sensor information.
+* ISP pipelines are not optimized for severe low-light, often introducing noise and color shifts.
+* Existing deep learning models trained on RGB images cannot fully exploit raw data.
+* Many techniques require manual preprocessing, limiting real-world use.
+
+### 1.3 Problem Statement
+
+Can we develop a deep neural network to learn an end-to-end mapping from short-exposure raw sensor data to high-quality, long-exposure-like RGB outputs, eliminating the need for traditional ISP and manual post-processing?
+
+### 1.4 Proposed Solution
+
+This project reproduces the SID framework (Chen et al., CVPR 2018) using a U-Net model to transform short-exposure raw images into bright, clean RGB images. Key points include:
+
+* Using paired Sony and Fuji raw datasets with short and long exposures.
+* Preprocessing raw Bayer images by packing into 4-channel tensors and scaling pixel intensities using exposure ratios.
+* Training a U-Net encoder-decoder CNN for end-to-end enhancement.
+* Evaluating output with L1 loss, PSNR, and SSIM metrics.
+* Completely bypassing traditional ISP for improved detail and color recovery.
+
+---
+
+## 2. Existing Systems / Related Work
+
+Traditional enhancement methods (histogram equalization, gamma correction, denoising) operate on processed RGB images and are limited under extreme low-light as they amplify noise and fail to recover lost details. Deep learning models such as CNNs, autoencoders, and GANs have been applied but usually train on RGB data post-ISP, losing raw sensor information.
+
+The SID framework is novel by directly processing raw short-exposure images with a CNN to produce long-exposure-like outputs. This end-to-end method outperforms classical and RGB-based approaches in extremely dark conditions by learning from raw sensor data.
+
+### 2.1 Summary Table of Existing Systems (Sony Dataset)
+
+| Method                       | Input Type | Characteristics                            | Limitations                           | PSNR (Sony) | SSIM (Sony) |
+| ---------------------------- | ---------- | ------------------------------------------ | ------------------------------------- | ----------- | ----------- |
+| Histogram Equalization/Gamma | RGB        | Simple global enhancement                  | Amplifies noise, poor in extreme dark | N/A         | N/A         |
+| BM3D/Denoising Filters       | RGB        | Spatial denoising                          | Not adaptive, detail loss             | \~24 dB     | \~0.75      |
+| CNN-based RGB Enhancement    | RGB        | Learns brightness and contrast filters     | Limited RGB training, poor raw use    | 25-26 dB    | 0.78-0.80   |
+| SID (See in the Dark)        | RAW        | End-to-end CNN on raw data, exposure-aware | Needs large training data, GPU-heavy  | 28.88 dB    | 0.787       |
+
+SID outperforms other methods by exploiting raw data and learning a direct mapping for low-light enhancement.
+
+---
+
+## 3. Proposed System
+
+### 3.1 Scope
+
+Reproduce the SID pipeline using a PyTorch U-Net trained on Sony and Fuji raw datasets with paired short- and long-exposure images. The system includes data preprocessing, exposure scaling, U-Net training, and performance evaluation (PSNR, SSIM).
+
+### 3.2 Modules
+
+* **Camera Metadata Extraction:** Extract ISO, shutter speed, aperture, and camera model from raw files to calculate exposure ratios.
+* **Exposure Ratio Estimation:** Calculate ratio between short and long exposure times for pixel intensity scaling.
+* **Bayer Pattern Packing:** Convert raw Bayer data into 4-channel tensors preserving spatial and spectral information.
+* **Long Exposure Frame Alignment (Optional):** Align paired images to compensate for scene motion using optical flow or feature matching.
+* **Output Quality Evaluation:** Evaluate enhanced images using PSNR and SSIM against ground truth.
+
+### 3.3 Advantages
+
+* Operates directly on raw images.
+* Avoids manual post-processing and traditional ISP steps.
+* Learns scene-specific noise and illumination patterns.
+* Produces high-quality images even under extreme darkness.
+* Reproducible based on peer-reviewed research.
+
+### 3.4 Limitations
+
+* Requires GPU with high VRAM for training.
+* Sensitive to errors in exposure ratio estimation.
+* May not generalize outside the SID dataset domain.
+* Raw Bayer data preprocessing is complex.
+
+### 3.5 Applications
+
+* Mobile camera low-light enhancement.
+* Night surveillance and forensic imaging.
+* Astronomical and medical imaging in low-light conditions.
+
+### 3.6 Sustainable Development Goals (SDG)
+
+* Goal 9: Industry, Innovation, and Infrastructure.
+* Goal 11: Sustainable Cities and Communities.
+* Goal 12: Responsible Consumption and Production.
+
+### 3.7 Dataset
+
+* Sony and Fuji subsets of the SID dataset.
+* Paired short-exposure raw inputs and long-exposure raw ground truth in ARW format.
+* Metadata used for exposure calculations.
+* Dataset manually verified for consistency.
+
+| Camera Model       | Filter Array | Exposure Times (s) | # Images |
+| ------------------ | ------------ | ------------------ | -------- |
+| Sony α7S II x300   | Bayer        | 1/10, 1/30         | 1190     |
+| Sony α7S II x250   | Bayer        | 1/25               | 699      |
+| Sony α7S II X100   | Bayer        | 1/10               | 808      |
+| Fujifilm X-T2 x300 | X-Trans      | 1/30               | 630      |
+| Fujifilm X-T2 x250 | X-Trans      | 1/25               | 650      |
+| Fujifilm X-T2 x100 | X-Trans      | 1/10               | 1117     |
+
+---
+
+## 4. Hardware and Software Requirements
+
+* **Hardware:** GPU with ≥8GB VRAM (e.g., RTX 3060 or above), 16GB RAM, SSD storage for fast data access.
+* **Software:** Python 3.9, PyTorch, rawpy (raw file reading), OpenCV (preprocessing, alignment), NumPy, VS Code or Jupyter Notebook.
+
+---
+
+## 5. References
+
+* Chen, Chen, et al. “Learning to See in the Dark.” CVPR 2018.
+* SID Dataset and Code Repository: [https://github.com/cchen156/Learning-to-See-in-the-Dark](https://github.com/cchen156/Learning-to-See-in-the-Dark)
+* PyTorch Documentation: [https://pytorch.org/docs/](https://pytorch.org/docs/)
+
